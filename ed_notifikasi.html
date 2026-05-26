@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ED Alert & Notifikasi</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e2d4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ED Monitor">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f0f4f8; font-family: 'Courier New', monospace; min-height: 100vh; }
+
+  /* TOP BAR */
+  .top-bar {
+    background: #ffffff;
+    border-bottom: 2px solid #d0d8e8;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .cross { background: #e53935; width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: white; flex-shrink: 0; }
+  .title-block h1 { font-size: 15px; font-weight: 800; color: #1a2233; letter-spacing: 1px; }
+  .title-block p { font-size: 10px; color: #6b7a99; letter-spacing: 1px; }
+  .back-btn {
+    margin-left: auto;
+    background: #f0f4f8;
+    border: 1px solid #d0d8e8;
+    border-radius: 6px;
+    color: #1a6fc4;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 6px 14px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    font-family: 'Courier New', monospace;
+    transition: background 0.15s;
+    display: flex; align-items: center; gap: 6px;
+    text-decoration: none;
+  }
+  .back-btn:hover { background: #dbeafe; }
+  .clock-badge { background: #f8fafc; border: 1px solid #d0d8e8; border-radius: 6px; padding: 4px 12px; text-align: center; }
+  .clock-badge .t { font-size: 16px; font-weight: 800; color: #1a6fc4; }
+  .clock-badge .d { font-size: 10px; color: #6b7a99; }
+
+  /* SUMMARY STATS */
+  .stats-bar {
+    display: flex; gap: 10px; padding: 12px 20px; flex-wrap: wrap;
+  }
+  .stat-pill {
+    background: #ffffff; border: 1px solid #d0d8e8; border-radius: 10px;
+    padding: 8px 18px; display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06); flex: 1; min-width: 140px;
+  }
+  .stat-pill .icon { font-size: 20px; }
+  .stat-pill .info .num { font-size: 22px; font-weight: 900; }
+  .stat-pill .info .lbl { font-size: 10px; font-weight: 700; color: #6b7a99; letter-spacing: 0.5px; }
+  .pill-red .num { color: #c62828; }
+  .pill-orange .num { color: #e65100; }
+  .pill-yellow .num { color: #d4a017; }
+  .pill-green .num { color: #00a854; }
+
+  /* FILTER BAR */
+  .filter-bar {
+    display: flex; gap: 8px; padding: 0 20px 12px; flex-wrap: wrap; align-items: center;
+  }
+  .filter-label { font-size: 11px; font-weight: 800; color: #6b7a99; letter-spacing: 0.5px; margin-right: 4px; }
+  .filter-btn {
+    background: #ffffff; border: 1.5px solid #d0d8e8; border-radius: 20px;
+    color: #3a4a6a; font-size: 11px; font-weight: 700; padding: 4px 14px;
+    cursor: pointer; font-family: 'Courier New', monospace; transition: all 0.15s;
+  }
+  .filter-btn:hover { background: #f0f4f8; }
+  .filter-btn.active-all { background: #1a2233; border-color: #1a2233; color: #fff; }
+  .filter-btn.active-breach { background: #ffebee; border-color: #c62828; color: #c62828; }
+  .filter-btn.active-risk { background: #fff3e0; border-color: #e65100; color: #e65100; }
+  .filter-btn.active-warn { background: #fffde7; border-color: #d4a017; color: #d4a017; }
+  .search-input {
+    margin-left: auto;
+    background: #ffffff; border: 1.5px solid #d0d8e8; border-radius: 6px;
+    color: #1a2233; font-size: 11px; font-weight: 700; padding: 5px 12px;
+    font-family: 'Courier New', monospace; outline: none; width: 180px;
+  }
+  .search-input:focus { border-color: #1a6fc4; }
+
+  /* MAIN TABLE AREA */
+  .main { padding: 0 20px 24px; }
+
+  .section-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px; margin-top: 16px;
+  }
+  .section-header h2 {
+    font-size: 12px; font-weight: 900; letter-spacing: 2px;
+    padding-bottom: 4px;
+  }
+  .section-header .count-badge {
+    font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;
+  }
+  .s-breach h2 { color: #c62828; border-bottom: 2px solid #c62828; padding-right: 60px; }
+  .s-breach .count-badge { background: #ffebee; color: #c62828; }
+  .s-risk h2 { color: #e65100; border-bottom: 2px solid #e65100; padding-right: 60px; }
+  .s-risk .count-badge { background: #fff3e0; color: #e65100; }
+  .s-warn h2 { color: #d4a017; border-bottom: 2px solid #d4a017; padding-right: 60px; }
+  .s-warn .count-badge { background: #fffde7; color: #d4a017; }
+
+  /* ALERT CARD */
+  .alert-cards { display: flex; flex-direction: column; gap: 8px; }
+  .alert-card {
+    background: #ffffff; border-radius: 10px; border-left: 5px solid #d0d8e8;
+    padding: 12px 16px; display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 0 14px; align-items: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    transition: box-shadow 0.2s;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: none; } }
+  .alert-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.10); }
+  .alert-card.breach { border-left-color: #c62828; background: #fffafa; }
+  .alert-card.risk   { border-left-color: #e65100; background: #fffcfa; }
+  .alert-card.warn   { border-left-color: #d4a017; background: #fffef5; }
+  .alert-card.flash-card { animation: cardflash 0.8s infinite; }
+  @keyframes cardflash { 0%,100% { opacity:1; } 50% { opacity:0.65; } }
+
+  .alert-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .icon-breach { background: #ffebee; }
+  .icon-risk   { background: #fff3e0; }
+  .icon-warn   { background: #fffde7; }
+
+  .alert-body {}
+  .alert-bed-name { font-size: 13px; font-weight: 900; color: #1a2233; letter-spacing: 0.5px; }
+  .alert-patient  { font-size: 12px; font-weight: 700; color: #3a4a6a; margin: 1px 0; }
+  .alert-badges   { display: flex; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
+  .abadge { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
+  .abadge-status-breach { background: #ffebee; color: #c62828; }
+  .abadge-status-risk   { background: #fff3e0; color: #e65100; }
+  .abadge-status-warn   { background: #fffde7; color: #d4a017; }
+  .abadge-obs   { background: #d4f0e0; color: #1b7a3e; }
+  .abadge-lab   { background: #fff3cd; color: #7a5000; }
+  .abadge-ct    { background: #dbeafe; color: #1565c0; }
+  .abadge-cons  { background: #ede7f6; color: #7b1fa2; }
+  .abadge-admit { background: #e3eeff; color: #1a4a9a; }
+  .abadge-proc  { background: #ffe8d0; color: #b84400; }
+  .abadge-iso   { background: #fce4ec; color: #ad1457; }
+  .abadge-icu   { background: #ffebee; color: #c62828; }
+  .abadge-plan  { background: #eceff1; color: #455a64; }
+
+  .alert-right { text-align: right; flex-shrink: 0; }
+  .alert-timer { font-size: 22px; font-weight: 900; font-family: 'Courier New', monospace; }
+  .timer-breach { color: #c62828; }
+  .timer-risk   { color: #e65100; }
+  .timer-warn   { color: #d4a017; }
+  .alert-since  { font-size: 10px; font-weight: 700; color: #6b7a99; margin-top: 2px; }
+  .alert-zone   { font-size: 10px; font-weight: 800; color: #8898bb; letter-spacing: 0.5px; margin-top: 4px; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 40px; color: #90a4ae; }
+  .empty-state .em { font-size: 36px; margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; }
+
+  /* REFRESH BAR */
+  .refresh-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 20px; background: #ffffff; border-top: 1px solid #e0e8f0;
+    font-size: 11px; font-weight: 700; color: #6b7a99; letter-spacing: 0.3px;
+    position: sticky; bottom: 0;
+  }
+  .refresh-dot { width: 8px; height: 8px; border-radius: 50%; background: #00a854; display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; transform: scale(1); } 50% { opacity:0.4; transform: scale(0.7); } }
+  .last-update { color: #1a6fc4; }
+
+  /* NO DATA */
+  .no-section { display: none; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="cross">+</div>
+  <div class="title-block">
+    <h1>ALERT &amp; NOTIFIKASI</h1>
+    <p>ED JOURNEY MONITOR — SQI TARGET &lt; 3 JAM</p>
+  </div>
+  <div class="clock-badge">
+    <div class="t" id="clock-time">--:--:--</div>
+    <div class="d" id="clock-date">-- --- ----</div>
+  </div>
+  <button class="back-btn" onclick="goBack()">← KEMBALI KE DASHBOARD</button>
+</div>
+
+<!-- SUMMARY STATS -->
+<div class="stats-bar" id="stats-bar">
+  <div class="stat-pill pill-red">
+    <div class="icon">🚨</div>
+    <div class="info"><div class="num" id="stat-breach">0</div><div class="lbl">&gt;3 JAM (BREACH)</div></div>
+  </div>
+  <div class="stat-pill pill-orange">
+    <div class="icon">⚠️</div>
+    <div class="info"><div class="num" id="stat-risk">0</div><div class="lbl">2.5–3 JAM (RISIKO)</div></div>
+  </div>
+  <div class="stat-pill pill-yellow">
+    <div class="icon">⏰</div>
+    <div class="info"><div class="num" id="stat-warn">0</div><div class="lbl">2–2.5 JAM (WASPADA)</div></div>
+  </div>
+  <div class="stat-pill pill-green">
+    <div class="icon">✅</div>
+    <div class="info"><div class="num" id="stat-total">0</div><div class="lbl">TOTAL PASIEN AKTIF</div></div>
+  </div>
+</div>
+
+<!-- FILTER -->
+<div class="filter-bar">
+  <span class="filter-label">FILTER:</span>
+  <button class="filter-btn active-all" id="f-all"   onclick="setFilter('all')">SEMUA</button>
+  <button class="filter-btn" id="f-breach" onclick="setFilter('breach')">🚨 BREACH</button>
+  <button class="filter-btn" id="f-risk"   onclick="setFilter('risk')">⚠ RISIKO</button>
+  <button class="filter-btn" id="f-warn"   onclick="setFilter('warn')">⏰ WASPADA</button>
+  <input class="search-input" id="search-input" placeholder="🔍 Cari nama / bed..." oninput="renderAlerts()" />
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- BREACH -->
+  <div class="section-header s-breach" id="sec-breach-hdr">
+    <h2>🚨 BREACH — LEBIH DARI 3 JAM</h2>
+    <span class="count-badge" id="breach-count">0</span>
+  </div>
+  <div class="alert-cards" id="breach-list"></div>
+
+  <!-- RISIKO -->
+  <div class="section-header s-risk" id="sec-risk-hdr">
+    <h2>⚠ RISIKO — 2.5 HINGGA 3 JAM</h2>
+    <span class="count-badge" id="risk-count">0</span>
+  </div>
+  <div class="alert-cards" id="risk-list"></div>
+
+  <!-- WASPADA -->
+  <div class="section-header s-warn" id="sec-warn-hdr">
+    <h2>⏰ WASPADA — 2 HINGGA 2.5 JAM</h2>
+    <span class="count-badge" id="warn-count">0</span>
+  </div>
+  <div class="alert-cards" id="warn-list"></div>
+
+  <div class="empty-state" id="empty-state" style="display:none;">
+    <div class="em">✅</div>
+    <p>TIDAK ADA PELANGGARAN AKTIF</p>
+  </div>
+
+</div>
+
+<!-- REFRESH BAR -->
+<div class="refresh-bar">
+  <div><span class="refresh-dot"></span>LIVE — AUTO REFRESH SETIAP 10 DETIK</div>
+  <div>TERAKHIR UPDATE: <span class="last-update" id="last-update">--:--:--</span></div>
+</div>
+
+<script>
+// ─── Navigation ───────────────────────────────────────────────────────────
+function goBack() {
+  // If opened in a new tab from dashboard, close this tab to go back
+  if (window.opener && !window.opener.closed) {
+    window.close();
+  } else if (document.referrer && document.referrer !== '') {
+    // If navigated normally, go back in history
+    window.history.back();
+  } else {
+    // Fallback: navigate directly to dashboard file
+    window.location.href = 'ed_journey_monitor_dashboard.html';
+  }
+}
+
+// ─── Shared beds data (mirrored from dashboard) ───────────────────────────
+// In a real integration, this would come from localStorage or a shared API.
+// For now we seed from sessionStorage if dashboard has written it,
+// otherwise we use a demo dataset so this page works standalone.
+
+const ZONE_LABEL = {
+  resus:'RESUSITASI', obs:'OBSERVASI', triage:'TRIAGE',
+  ft:'FAST TRACK', proc:'PROCEDURE', iso:'ISOLASI',
+  wc:'OVERCAPACITY / WC', oc:'OVERCAPACITY BED'
+};
+
+function getBeds() {
+  try {
+    const raw = sessionStorage.getItem('ed_beds');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  // Demo data when opened standalone
+  const NOW = Date.now();
+  return [
+    { id:'R1', zone:'resus', name:'RESUS 1', patient:'AHMAD R.', startTime: NOW - 165*60000, status:'WAIT ICU', plan:'ICU' },
+    { id:'R2', zone:'resus', name:'RESUS 2', patient:'BUDI K.', startTime: NOW - 112*60000, status:'OBSERVASI', plan:'ADMIT' },
+    { id:'R3', zone:'resus', name:'RESUS 3', patient:'SITI N.', startTime: NOW - 132*60000, status:'WAIT LAB', plan:'ADMIT' },
+    { id:'R4', zone:'resus', name:'RESUS 4', patient:null, startTime:null, status:'', plan:'' },
+    { id:'OBS1', zone:'obs', name:'OBS 1', patient:'DWI L.', startTime: NOW - 70*60000, status:'OBSERVASI', plan:'DISCHARGE' },
+    { id:'OBS2', zone:'obs', name:'OBS 2', patient:'JOKO T.', startTime: NOW - 125*60000, status:'WAIT LAB', plan:'ADMIT' },
+    { id:'OBS3', zone:'obs', name:'OBS 3', patient:'NUR A.', startTime: NOW - 151*60000, status:'WAIT CT', plan:'ADMIT' },
+    { id:'OBS4', zone:'obs', name:'OBS 4', patient:'YUSUF H.', startTime: NOW - 172*60000, status:'WAIT ADMIT', plan:'ADMIT' },
+    { id:'OBS5', zone:'obs', name:'OBS 5', patient:'RINA M.', startTime: NOW - 95*60000, status:'OBSERVASI', plan:'DISCHARGE' },
+    { id:'OBS6', zone:'obs', name:'OBS 6', patient:'AGUS S.', startTime: NOW - 140*60000, status:'WAIT LAB', plan:'ADMIT' },
+    { id:'OBS7', zone:'obs', name:'OBS 7', patient:'DEWI P.', startTime: NOW - 168*60000, status:'WAIT CONSULT', plan:'ADMIT' },
+    { id:'OBS8', zone:'obs', name:'OBS 8', patient:null, startTime:null, status:'', plan:'' },
+    { id:'TRIAGE', zone:'triage', name:'TRIAGE', patient:'TONI A.', startTime: NOW - 65*60000, status:'OBSERVASI', plan:'DISCHARGE' },
+    { id:'FT1', zone:'ft', name:'FT 1', patient:'LIA W.', startTime: NOW - 58*60000, status:'OBSERVASI', plan:'DISCHARGE' },
+    { id:'FT2', zone:'ft', name:'FT 2', patient:'FARHAN D.', startTime: NOW - 100*60000, status:'WAIT LAB', plan:'DISCHARGE' },
+    { id:'PROC1', zone:'proc', name:'PROC 1', patient:'MAYA S.', startTime: NOW - 95*60000, status:'PROCEDURE', plan:'DISCHARGE' },
+    { id:'ISO1', zone:'iso', name:'ISO 1', patient:'HENDRA Y.', startTime: NOW - 138*60000, status:'ISOLASI', plan:'ADMIT' },
+    { id:'WC1', zone:'wc', name:'WC 1', patient:'BAMBANG I.', startTime: NOW - 158*60000, status:'WAIT ADMIT', plan:'ADMIT' },
+    { id:'WC2', zone:'wc', name:'WC 2', patient:'TIA R.', startTime: NOW - 75*60000, status:'OBSERVASI', plan:'DISCHARGE' },
+    { id:'WC3', zone:'wc', name:'WC 3', patient:'GALIH P.', startTime: NOW - 136*60000, status:'WAIT LAB', plan:'ADMIT' },
+    { id:'WC4', zone:'wc', name:'WC 4', patient:null, startTime:null, status:'', plan:'' },
+    { id:'OC1', zone:'oc', name:'OC 1', patient:null, startTime:null, status:'', plan:'' },
+    { id:'OC2', zone:'oc', name:'OC 2', patient:null, startTime:null, status:'', plan:'' },
+    { id:'OC3', zone:'oc', name:'OC 3', patient:null, startTime:null, status:'', plan:'' },
+    { id:'OC4', zone:'oc', name:'OC 4', patient:null, startTime:null, status:'', plan:'' },
+  ];
+}
+
+function formatTime(ms) {
+  let s = Math.floor(ms/1000);
+  let h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+}
+function formatHM(ms) {
+  let s = Math.floor(ms/1000);
+  let h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+  return h > 0 ? `${h}j ${m}m` : `${m}m`;
+}
+function sinceTime(startTime) {
+  const d = new Date(startTime);
+  return 'MASUK ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+const STATUS_BADGE = {
+  'OBSERVASI':'abadge-obs','WAIT LAB':'abadge-lab','WAIT CT':'abadge-ct',
+  'WAIT CONSULT':'abadge-cons','WAIT ADMIT':'abadge-admit','PROCEDURE':'abadge-proc',
+  'ISOLASI':'abadge-iso','WAIT ICU':'abadge-icu'
+};
+const PLAN_BADGE = { 'ICU':'abadge-icu','DISCHARGE':'abadge-obs','ADMIT':'abadge-admit' };
+
+let currentFilter = 'all';
+
+function setFilter(f) {
+  currentFilter = f;
+  ['all','breach','risk','warn'].forEach(x => {
+    const btn = document.getElementById('f-'+x);
+    btn.className = 'filter-btn' + (x === f ? ' active-'+x : '');
+  });
+  renderAlerts();
+}
+
+function matchSearch(b, q) {
+  if (!q) return true;
+  const s = q.toLowerCase();
+  return (b.patient||'').toLowerCase().includes(s) || b.name.toLowerCase().includes(s);
+}
+
+function renderAlerts() {
+  const now = Date.now();
+  const beds = getBeds();
+  const q = document.getElementById('search-input').value.trim();
+
+  const occupied = beds.filter(b => b.patient && b.startTime);
+  const breach = occupied.filter(b => (now - b.startTime)/60000 >= 180).sort((a,b2)=>(now-b2.startTime)-(now-a.startTime));
+  const risk   = occupied.filter(b => { const m=(now-b.startTime)/60000; return m>=150 && m<180; }).sort((a,b2)=>(now-b2.startTime)-(now-a.startTime));
+  const warn   = occupied.filter(b => { const m=(now-b.startTime)/60000; return m>=120 && m<150; }).sort((a,b2)=>(now-b2.startTime)-(now-a.startTime));
+
+  document.getElementById('stat-breach').textContent = breach.length;
+  document.getElementById('stat-risk').textContent = risk.length;
+  document.getElementById('stat-warn').textContent = warn.length;
+  document.getElementById('stat-total').textContent = occupied.length;
+
+  function makeCard(b, level) {
+    const elapsed = now - b.startTime;
+    const mins = elapsed / 60000;
+    const timerClass = level === 'breach' ? 'timer-breach' : level === 'risk' ? 'timer-risk' : 'timer-warn';
+    const iconClass  = level === 'breach' ? 'icon-breach' : level === 'risk' ? 'icon-risk' : 'icon-warn';
+    const icon       = level === 'breach' ? '🚨' : level === 'risk' ? '⚠️' : '⏰';
+    const statusLevel= level === 'breach' ? 'abadge-status-breach' : level === 'risk' ? 'abadge-status-risk' : 'abadge-status-warn';
+    const statusText = level === 'breach' ? 'BREACH >3 JAM' : level === 'risk' ? 'RISIKO >2.5 JAM' : 'WASPADA >2 JAM';
+    const flashCard  = level === 'breach' ? ' flash-card' : '';
+    const sBadge = STATUS_BADGE[b.status] || 'abadge-plan';
+    const pBadge = PLAN_BADGE[b.plan] || 'abadge-plan';
+    return `<div class="alert-card ${level}${flashCard}">
+      <div class="alert-icon ${iconClass}">${icon}</div>
+      <div class="alert-body">
+        <div class="alert-bed-name">${b.name}</div>
+        <div class="alert-patient">${b.patient}</div>
+        <div class="alert-badges">
+          <span class="abadge ${statusLevel}">${statusText}</span>
+          ${b.status ? `<span class="abadge ${sBadge}">${b.status}</span>` : ''}
+          ${b.plan   ? `<span class="abadge ${pBadge}">${b.plan}</span>` : ''}
+        </div>
+        <div class="alert-zone">${ZONE_LABEL[b.zone] || b.zone}</div>
+      </div>
+      <div class="alert-right">
+        <div class="alert-timer ${timerClass}" id="ntimer-${b.id}">${formatTime(elapsed)}</div>
+        <div class="alert-since">${sinceTime(b.startTime)}</div>
+        <div class="alert-since">${formatHM(elapsed)}</div>
+      </div>
+    </div>`;
+  }
+
+  function renderSection(list, level, listId, hdrId, countId) {
+    const filtered = list.filter(b => matchSearch(b, q));
+    const show = (currentFilter === 'all' || currentFilter === level) && filtered.length > 0;
+    document.getElementById(hdrId).style.display = show ? 'flex' : 'none';
+    document.getElementById(countId).textContent = filtered.length;
+    document.getElementById(listId).innerHTML = show ? filtered.map(b => makeCard(b, level)).join('') : '';
+    return filtered.length;
+  }
+
+  const nb = renderSection(breach, 'breach', 'breach-list', 'sec-breach-hdr', 'breach-count');
+  const nr = renderSection(risk,   'risk',   'risk-list',   'sec-risk-hdr',   'risk-count');
+  const nw = renderSection(warn,   'warn',   'warn-list',   'sec-warn-hdr',   'warn-count');
+
+  document.getElementById('empty-state').style.display = (nb+nr+nw===0) ? 'block' : 'none';
+
+  const now2 = new Date();
+  document.getElementById('last-update').textContent =
+    String(now2.getHours()).padStart(2,'0')+':'+String(now2.getMinutes()).padStart(2,'0')+':'+String(now2.getSeconds()).padStart(2,'0');
+}
+
+function tickTimers() {
+  const now = Date.now();
+  const beds = getBeds();
+  beds.filter(b=>b.patient&&b.startTime).forEach(b => {
+    const el = document.getElementById('ntimer-'+b.id);
+    if (el) el.textContent = formatTime(now - b.startTime);
+  });
+}
+
+function updateClock() {
+  const d = new Date();
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+  document.getElementById('clock-time').textContent =
+    String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+  document.getElementById('clock-date').textContent =
+    d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+}
+
+renderAlerts();
+setInterval(tickTimers, 1000);
+setInterval(updateClock, 1000);
+setInterval(renderAlerts, 10000);
+updateClock();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>

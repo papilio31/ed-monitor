@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ED Riwayat Pasien</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e2d4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ED Monitor">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #e8ecf4; font-family: 'Inter', sans-serif; min-height: 100vh; color: #1a2233; }
+
+/* TOP BAR */
+.top-bar {
+  background: #fff; border-bottom: 2px solid #d4daea;
+  padding: 10px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+.cross { background: #e53935; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: #fff; flex-shrink: 0; box-shadow: 0 2px 8px rgba(229,57,53,0.3); }
+.title-block h1 { font-size: 16px; font-weight: 900; color: #1a2233; letter-spacing: 0.3px; }
+.title-block p  { font-size: 10px; font-weight: 600; color: #5a6a88; letter-spacing: 0.5px; }
+.top-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.btn-back { background: #f0f4f8; border: 1.5px solid #d4daea; border-radius: 8px; color: #2563eb; font-size: 11px; font-weight: 800; padding: 7px 14px; cursor: pointer; font-family: 'Inter',sans-serif; transition: background 0.15s; }
+.btn-back:hover { background: #dbeafe; }
+.btn-export { background: #2563eb; border: none; border-radius: 8px; color: #fff; font-size: 11px; font-weight: 800; padding: 7px 14px; cursor: pointer; font-family: 'Inter',sans-serif; transition: background 0.15s; }
+.btn-export:hover { background: #1d4ed8; }
+.btn-clear { background: #fff1f2; border: 1.5px solid #fca5a5; border-radius: 8px; color: #dc2626; font-size: 11px; font-weight: 800; padding: 7px 14px; cursor: pointer; font-family: 'Inter',sans-serif; }
+.btn-clear:hover { background: #fee2e2; }
+.clock-badge { background: #1e2d4a; border-radius: 8px; padding: 5px 14px; text-align: center; }
+.clock-badge .t { font-size: 16px; font-weight: 900; color: #60a5fa; }
+.clock-badge .d { font-size: 10px; font-weight: 600; color: #94a3b8; }
+
+/* STAT PILLS */
+.stats-row { display: flex; gap: 10px; padding: 14px 20px 0; flex-wrap: wrap; }
+.stat-pill { background: #fff; border: 1.5px solid #d4daea; border-radius: 12px; padding: 10px 20px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); flex: 1; min-width: 130px; }
+.stat-pill .ico { font-size: 22px; }
+.stat-pill .num { font-size: 26px; font-weight: 900; }
+.stat-pill .lbl { font-size: 10px; font-weight: 700; color: #7a8aaa; letter-spacing: 0.5px; }
+.p-total .num { color: #1d4ed8; }
+.p-in .num    { color: #059669; }
+.p-dis .num   { color: #7c3aed; }
+.p-tx .num    { color: #d97706; }
+.p-st .num    { color: #0e7490; }
+.p-avg .num   { color: #be185d; font-size: 20px; }
+
+/* FILTERS */
+.filter-bar {
+  display: flex; gap: 8px; padding: 14px 20px; flex-wrap: wrap; align-items: center;
+  background: #fff; margin: 14px 20px 0; border-radius: 12px;
+  border: 1.5px solid #d4daea; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.filter-bar label { font-size: 10px; font-weight: 800; color: #7a8aaa; letter-spacing: 0.5px; white-space: nowrap; }
+.filter-bar select, .filter-bar input[type=date] {
+  background: #f8fafc; border: 1.5px solid #d4daea; border-radius: 7px;
+  color: #1a2233; font-size: 11px; font-weight: 700; padding: 5px 10px;
+  font-family: 'Inter', sans-serif; cursor: pointer; outline: none;
+}
+.filter-bar select:focus, .filter-bar input:focus { border-color: #2563eb; }
+.search-box {
+  margin-left: auto; background: #f8fafc; border: 1.5px solid #d4daea; border-radius: 7px;
+  color: #1a2233; font-size: 12px; font-weight: 600; padding: 6px 12px;
+  font-family: 'Inter', sans-serif; outline: none; width: 200px;
+}
+.search-box:focus { border-color: #2563eb; }
+.filter-divider { width: 1px; height: 24px; background: #d4daea; }
+
+/* MAIN TABLE */
+.main { padding: 14px 20px 30px; }
+.table-wrap { background: #fff; border-radius: 14px; border: 1.5px solid #d4daea; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+.table-header-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1.5px solid #e8ecf4; }
+.table-header-row h2 { font-size: 13px; font-weight: 900; color: #1a2233; letter-spacing: 0.5px; }
+.record-count { font-size: 11px; font-weight: 700; color: #7a8aaa; }
+
+table { width: 100%; border-collapse: collapse; }
+thead tr { background: #f1f5f9; }
+thead th {
+  padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 900;
+  color: #5a6a88; letter-spacing: 1px; text-transform: uppercase;
+  border-bottom: 1.5px solid #d4daea; white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid #f0f4f8; transition: background 0.12s; }
+tbody tr:hover { background: #f8faff; }
+tbody tr:last-child { border-bottom: none; }
+tbody td { padding: 10px 14px; font-size: 12px; font-weight: 600; color: #1a2233; vertical-align: middle; }
+
+.td-time { font-family: 'Inter', monospace; font-weight: 700; color: #5a6a88; white-space: nowrap; }
+.td-patient { font-weight: 800; color: #0f172a; }
+.td-bed { font-size: 11px; font-weight: 800; color: #3a4a6a; }
+.td-dur { font-weight: 800; font-family: 'Inter', monospace; }
+.dur-ok { color: #059669; }
+.dur-warn { color: #d97706; }
+.dur-risk { color: #ea580c; }
+.dur-breach { color: #dc2626; }
+
+/* EVENT BADGES */
+.ev-badge { font-size: 10px; font-weight: 900; padding: 3px 9px; border-radius: 5px; white-space: nowrap; letter-spacing: 0.2px; }
+.ev-masuk  { background: #dcfce7; color: #14532d; }
+.ev-discharge { background: #ede9fe; color: #4c1d95; }
+.ev-transfer  { background: #fef9c3; color: #713f12; }
+.ev-transfer-in { background: #dbeafe; color: #1e3a8a; }
+.ev-status    { background: #e0f2fe; color: #0c4a6e; }
+
+/* ZONE BADGES */
+.zone-badge { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
+.z-resus  { background: #fee2e2; color: #991b1b; }
+.z-obs    { background: #dbeafe; color: #1e3a8a; }
+.z-triage { background: #dcfce7; color: #14532d; }
+.z-ft     { background: #ede9fe; color: #4c1d95; }
+.z-proc   { background: #ffedd5; color: #7c2d12; }
+.z-iso    { background: #fce7f3; color: #831843; }
+.z-wc     { background: #cffafe; color: #164e63; }
+.z-oc     { background: #e0f2fe; color: #0c4a6e; }
+
+/* STATUS / PLAN BADGE */
+.sp-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: #f1f5f9; color: #475569; }
+
+/* EXTRA INFO */
+.td-extra { font-size: 11px; color: #7a8aaa; font-weight: 600; }
+
+/* EMPTY STATE */
+.empty-state { padding: 60px 20px; text-align: center; }
+.empty-state .em { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; font-weight: 700; color: #94a3b8; }
+.empty-state small { font-size: 11px; color: #b0bec5; margin-top: 6px; display: block; }
+
+/* REFRESH BAR */
+.refresh-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 20px; background: #fff; border-top: 1px solid #e0e8f0;
+  font-size: 11px; font-weight: 700; color: #7a8aaa;
+  position: sticky; bottom: 0;
+}
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #059669; display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);} }
+.last-update { color: #2563eb; font-weight: 800; }
+
+/* PAGINATION */
+.pagination { display: flex; gap: 6px; align-items: center; padding: 12px 18px; border-top: 1.5px solid #e8ecf4; justify-content: flex-end; }
+.page-btn { background: #f1f5f9; border: 1.5px solid #d4daea; border-radius: 6px; color: #3a4a6a; font-size: 11px; font-weight: 800; padding: 4px 12px; cursor: pointer; font-family: 'Inter',sans-serif; transition: all 0.12s; }
+.page-btn:hover { background: #dbeafe; border-color: #93c5fd; }
+.page-btn.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+.page-info { font-size: 11px; font-weight: 700; color: #7a8aaa; margin: 0 6px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="cross">+</div>
+  <div class="title-block">
+    <h1>RIWAYAT PASIEN — ED JOURNEY MONITOR</h1>
+    <p>REKAM JEJAK SELURUH AKTIVITAS PASIEN</p>
+  </div>
+  <div class="clock-badge">
+    <div class="t" id="clock-time">--:--:--</div>
+    <div class="d" id="clock-date">-- --- ----</div>
+  </div>
+  <div class="top-actions">
+    <button class="btn-export" onclick="exportCSV()">⬇ EXPORT CSV</button>
+    <button class="btn-clear" onclick="clearHistory()">🗑 HAPUS DATA</button>
+    <button class="btn-back" onclick="goBack()">← DASHBOARD</button>
+  </div>
+</div>
+
+<!-- STAT PILLS -->
+<div class="stats-row" id="stats-row"></div>
+
+<!-- FILTERS -->
+<div class="filter-bar">
+  <label>STATUS KUNJUNGAN</label>
+  <select id="f-event" onchange="applyFilters()">
+    <option value="">SEMUA</option>
+    <option value="AKTIF">AKTIF</option>
+    <option value="DISCHARGE">DISCHARGE</option>
+  </select>
+  <div class="filter-divider"></div>
+  <label>ZONA</label>
+  <select id="f-zone" onchange="applyFilters()">
+    <option value="">SEMUA ZONA</option>
+    <option value="resus">RESUSITASI</option>
+    <option value="obs">OBSERVASI</option>
+    <option value="triage">TRIAGE</option>
+    <option value="ft">FAST TRACK</option>
+    <option value="proc">PROCEDURE</option>
+    <option value="iso">ISOLASI</option>
+    <option value="wc">OC KURSI RODA</option>
+    <option value="oc">OC BED</option>
+  </select>
+  <div class="filter-divider"></div>
+  <label>DARI</label>
+  <input type="date" id="f-from" onchange="applyFilters()" />
+  <label>S/D</label>
+  <input type="date" id="f-to" onchange="applyFilters()" />
+  <div class="filter-divider"></div>
+  <label>DURASI</label>
+  <select id="f-dur" onchange="applyFilters()">
+    <option value="">SEMUA</option>
+    <option value="ok">Aman (&lt;2 jam)</option>
+    <option value="warn">Waspada (2–2.5 jam)</option>
+    <option value="risk">Risiko (2.5–3 jam)</option>
+    <option value="breach">Breach (&gt;3 jam)</option>
+  </select>
+  <input class="search-box" id="search-box" placeholder="🔍 Cari nama pasien / bed..." oninput="applyFilters()" />
+</div>
+
+<!-- TABLE -->
+<div class="main">
+  <div class="table-wrap">
+    <div class="table-header-row">
+      <h2>📋 DATA KUNJUNGAN PASIEN</h2>
+      <span class="record-count" id="record-count">0 rekaman</span>
+    </div>
+    <div id="table-body"></div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<!-- REFRESH BAR -->
+<div class="refresh-bar">
+  <div><span class="live-dot"></span>DATA DARI LOCALSTORAGE — SINKRON DENGAN DASHBOARD</div>
+  <div>TERAKHIR REFRESH: <span class="last-update" id="last-update">--:--:--</span></div>
+</div>
+
+<script>
+// ─── NAVIGATION ──────────────────────────────────────────────────────────
+function goBack() {
+  if (window.opener && !window.opener.closed) { window.close(); }
+  else if (document.referrer) { window.history.back(); }
+  else { window.location.href = 'ed_journey_monitor_dashboard.html'; }
+}
+
+// ─── DATA ────────────────────────────────────────────────────────────────
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem('ed_patients') || '[]'); } catch(e) { return []; }
+}
+
+const ZONE_LABEL = {
+  resus:'RESUSITASI', obs:'OBSERVASI', triage:'TRIAGE', ft:'FAST TRACK',
+  proc:'PROCEDURE', iso:'ISOLASI', wc:'OC KURSI RODA', oc:'OC BED'
+};
+
+// ─── STATE ───────────────────────────────────────────────────────────────
+let filtered = [];
+let page = 1;
+const PER_PAGE = 30;
+
+// ─── STATS ───────────────────────────────────────────────────────────────
+function renderStats(records) {
+  const total    = records.length;
+  const aktif    = records.filter(r=>r.visitStatus==='AKTIF').length;
+  const discharge= records.filter(r=>r.visitStatus==='DISCHARGE').length;
+  const breach   = records.filter(r=>r.durationMins>=180).length;
+  const durs     = records.filter(r=>r.visitStatus==='DISCHARGE'&&r.durationMins>0).map(r=>r.durationMins);
+  const avg      = durs.length ? Math.round(durs.reduce((a,b)=>a+b,0)/durs.length) : 0;
+  const avgStr   = avg ? `${Math.floor(avg/60)}j ${avg%60}m` : '—';
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-pill p-total"><div class="ico">📋</div><div><div class="num">${total}</div><div class="lbl">TOTAL PASIEN</div></div></div>
+    <div class="stat-pill p-in"><div class="ico">🏥</div><div><div class="num">${aktif}</div><div class="lbl">MASIH AKTIF</div></div></div>
+    <div class="stat-pill p-dis"><div class="ico">✅</div><div><div class="num">${discharge}</div><div class="lbl">DISCHARGE</div></div></div>
+    <div class="stat-pill p-tx"><div class="ico">🚨</div><div><div class="num">${breach}</div><div class="lbl">BREACH &gt;3 JAM</div></div></div>
+    <div class="stat-pill p-avg"><div class="ico">⏱</div><div><div class="num">${avgStr}</div><div class="lbl">RATA-RATA LOS</div></div></div>
+  `;
+}
+
+// ─── FILTERS ─────────────────────────────────────────────────────────────
+function applyFilters() {
+  page = 1;
+  const records = getHistory();
+  const ev   = document.getElementById('f-event').value;       // visitStatus filter
+  const zone = document.getElementById('f-zone').value;
+  const from = document.getElementById('f-from').value;
+  const to   = document.getElementById('f-to').value;
+  const dur  = document.getElementById('f-dur').value;
+  const q    = document.getElementById('search-box').value.toLowerCase().trim();
+
+  filtered = records.filter(r => {
+    if (ev   && r.visitStatus !== ev) return false;
+    if (zone && r.zone !== zone) return false;
+    // filter by admit date
+    if (from || to) {
+      const admitIso = r.admitDate ? r.admitDate.split('/').reverse().join('-') : '';
+      // admitDate is id-ID format dd/mm/yyyy, convert to yyyy-mm-dd for compare
+      const parts = (r.admitDate||'').split('/');
+      const isoDate = parts.length===3 ? parts[2]+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0') : '';
+      if (from && isoDate < from) return false;
+      if (to   && isoDate > to)   return false;
+    }
+    if (q && !(r.patient||'').toLowerCase().includes(q) && !(r.bedName||'').toLowerCase().includes(q) && !(r.mr||'').toLowerCase().includes(q)) return false;
+    if (dur) {
+      const m = r.durationMins || 0;
+      if (dur==='ok'     && !(m < 120)) return false;
+      if (dur==='warn'   && !(m >= 120 && m < 150)) return false;
+      if (dur==='risk'   && !(m >= 150 && m < 180)) return false;
+      if (dur==='breach' && !(m >= 180)) return false;
+    }
+    return true;
+  });
+
+  renderStats(filtered.length > 0 ? filtered : records);
+  renderTable();
+}
+
+// ─── TABLE ────────────────────────────────────────────────────────────────
+const EV_CLASS = {
+  'MASUK':'ev-masuk', 'DISCHARGE':'ev-discharge',
+  'TRANSFER':'ev-transfer', 'TRANSFER MASUK':'ev-transfer-in', 'UBAH STATUS':'ev-status'
+};
+const ZONE_CLASS = { resus:'z-resus',obs:'z-obs',triage:'z-triage',ft:'z-ft',proc:'z-proc',iso:'z-iso',wc:'z-wc',oc:'z-oc' };
+
+function durClass(m) {
+  if (!m) return '';
+  if (m >= 180) return 'dur-breach';
+  if (m >= 150) return 'dur-risk';
+  if (m >= 120) return 'dur-warn';
+  return 'dur-ok';
+}
+function durStr(m) {
+  if (!m) return '—';
+  return `${Math.floor(m/60)}j ${m%60}m`;
+}
+function extraStr(r) {
+  if (r.event === 'TRANSFER' && r.extra?.toBed) return `→ ${r.extra.toBed}`;
+  if (r.event === 'UBAH STATUS' && r.extra?.from) return r.extra.from;
+  if (r.event === 'TRANSFER MASUK' && r.extra) return `dari transfer`;
+  return '—';
+}
+
+function renderTable() {
+  const start = (page-1)*PER_PAGE, end = start+PER_PAGE;
+  const slice = filtered.slice(start, end);
+  document.getElementById('record-count').textContent = `${filtered.length} rekaman`;
+
+  if (filtered.length === 0) {
+    document.getElementById('table-body').innerHTML = `
+      <div class="empty-state">
+        <div class="em">🗂️</div>
+        <p>Belum ada data kunjungan pasien</p>
+        <small>Data akan muncul setelah pasien ditambahkan di dashboard</small>
+      </div>`;
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('table-body').innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>TGL MASUK</th>
+          <th>NO. MR</th>
+          <th>PASIEN</th>
+          <th>BED</th>
+          <th>ZONA</th>
+          <th>JAM MASUK</th>
+          <th>STATUS TERAKHIR</th>
+          <th>PLAN</th>
+          <th>JAM DISCHARGE</th>
+          <th>DURASI ED</th>
+          <th>STATUS KUNJUNGAN</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${slice.map((r, i) => {
+          const isDis = r.visitStatus === 'DISCHARGE';
+          const isAktif = r.visitStatus === 'AKTIF';
+          // For active patients, compute live duration
+          const liveMins = isAktif && r.admitTimestamp ? Math.round((Date.now() - r.admitTimestamp) / 60000) : (r.durationMins || 0);
+          return `
+          <tr style="${isDis ? 'opacity:0.82;' : ''}">
+            <td class="td-time" style="color:#b0bec5;">${filtered.length - start - i}</td>
+            <td class="td-time">${r.admitDate || '—'}</td>
+            <td style="font-size:12px;font-weight:800;color:#1d4ed8;font-family:'Inter',monospace;">${r.mr && r.mr!=='-' ? r.mr : '<span style="color:#b0bec5;">—</span>'}</td>
+            <td class="td-patient">${r.patient || '—'}</td>
+            <td class="td-bed">${r.bedName}</td>
+            <td><span class="zone-badge ${ZONE_CLASS[r.zone]||''}">${ZONE_LABEL[r.zone]||r.zone}</span></td>
+            <td class="td-time" style="font-weight:800;color:#059669;">${r.admitTime || '—'}</td>
+            <td><span class="sp-badge">${r.status || '—'}</span></td>
+            <td><span class="sp-badge">${r.plan || '—'}</span></td>
+            <td class="td-time">${isDis && r.dischargeTime && r.dischargeTime!=='-' ? '<span style="font-weight:800;color:#7c3aed;">'+r.dischargeTime+'</span>' : '<span style="color:#b0bec5;">—</span>'}</td>
+            <td class="td-dur ${durClass(liveMins)}">${durStr(liveMins)}</td>
+            <td><span class="ev-badge ${isDis ? 'ev-discharge' : 'ev-masuk'}">${r.visitStatus || 'AKTIF'}</span></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+
+  renderPagination();
+
+  const now = new Date();
+  document.getElementById('last-update').textContent =
+    String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+}
+
+function renderPagination() {
+  const total = Math.ceil(filtered.length / PER_PAGE);
+  if (total <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+  let html = '';
+  if (page > 1) html += `<button class="page-btn" onclick="goPage(${page-1})">← PREV</button>`;
+  const start = Math.max(1, page-2), end = Math.min(total, page+2);
+  for (let p = start; p <= end; p++) {
+    html += `<button class="page-btn ${p===page?'active':''}" onclick="goPage(${p})">${p}</button>`;
+  }
+  if (page < total) html += `<button class="page-btn" onclick="goPage(${page+1})">NEXT →</button>`;
+  html += `<span class="page-info">Hal ${page} / ${total} (${filtered.length} rekaman)</span>`;
+  document.getElementById('pagination').innerHTML = html;
+}
+
+function goPage(p) { page = p; renderTable(); window.scrollTo(0,0); }
+
+// ─── EXPORT CSV ──────────────────────────────────────────────────────────
+function exportCSV() {
+  const rows = [['No','Tanggal Masuk','No. MR','Pasien','Bed','Zona','Jam Masuk','Status Terakhir','Plan','Jam Discharge','Durasi ED (menit)','Status Kunjungan']];
+  filtered.forEach((r, i) => {
+    const liveMins = r.visitStatus==='AKTIF' && r.admitTimestamp ? Math.round((Date.now()-r.admitTimestamp)/60000) : (r.durationMins||0);
+    rows.push([
+      filtered.length - i,
+      r.admitDate||'', r.mr||'', r.patient||'', r.bedName||'',
+      ZONE_LABEL[r.zone]||r.zone,
+      r.admitTime||'',
+      r.status||'', r.plan||'',
+      (r.dischargeTime && r.dischargeTime!=='-') ? r.dischargeTime : '',
+      liveMins,
+      r.visitStatus||'AKTIF'
+    ]);
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ED_Riwayat_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ─── CLEAR ───────────────────────────────────────────────────────────────
+function clearHistory() {
+  if (!confirm('Hapus semua data riwayat? Aksi ini tidak bisa dibatalkan.')) return;
+  localStorage.removeItem('ed_patients');
+  applyFilters();
+}
+
+// ─── CLOCK ───────────────────────────────────────────────────────────────
+function updateClock() {
+  const d = new Date();
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+  document.getElementById('clock-time').textContent = String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+  document.getElementById('clock-date').textContent = d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+// Set today as default date range
+const today = new Date().toISOString().slice(0,10);
+document.getElementById('f-to').value = today;
+
+applyFilters();
+updateClock();
+setInterval(updateClock, 1000);
+setInterval(applyFilters, 10000); // auto-refresh every 10s
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>

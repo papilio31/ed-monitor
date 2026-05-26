@@ -1,0 +1,85 @@
+=====================================================
+  ED JOURNEY MONITOR — PANDUAN INSTALASI & PENGGUNAAN
+=====================================================
+
+ISI FOLDER:
+  - ed_journey_monitor_dashboard.html  → Halaman utama dashboard
+  - ed_history.html                    → Laporan & riwayat pasien
+  - ed_notifikasi.html                 → Alert & notifikasi breach
+  - manifest.json                      → Konfigurasi PWA (install app)
+  - sw.js                              → Service worker (offline mode)
+  - icon-192.png / icon-512.png        → Icon aplikasi
+  - CARA-PAKAI.txt                     → File ini
+
+=====================================================
+  LANGKAH 1 — JALANKAN WEB SERVER LOKAL
+=====================================================
+
+Aplikasi ini perlu dijalankan lewat web server (tidak bisa
+dibuka langsung dari File Explorer / klik 2x).
+
+--- CARA A: Pakai Python (direkomendasikan) ---
+  1. Buka Command Prompt / Terminal
+  2. Arahkan ke folder ini:
+       cd C:\path\ke\ED-Monitor-App
+  3. Jalankan:
+       python -m http.server 8080
+     (Kalau Python 2: python -m SimpleHTTPServer 8080)
+  4. Buka Chrome, ketik di address bar:
+       http://localhost:8080/ed_journey_monitor_dashboard.html
+
+--- CARA B: Pakai ekstensi Chrome "Web Server for Chrome" ---
+  1. Install dari Chrome Web Store:
+     https://chrome.google.com/webstore/detail/web-server-for-chrome/
+  2. Klik "CHOOSE FOLDER" → pilih folder ED-Monitor-App
+  3. Pastikan port 8080, klik toggle ON
+  4. Buka: http://127.0.0.1:8080/ed_journey_monitor_dashboard.html
+
+--- CARA C: Pakai VS Code (Live Server extension) ---
+  1. Buka folder ini di VS Code
+  2. Klik kanan ed_journey_monitor_dashboard.html
+  3. Pilih "Open with Live Server"
+
+=====================================================
+  LANGKAH 2 — INSTALL SEBAGAI APLIKASI (PWA)
+=====================================================
+
+Setelah dibuka di Chrome:
+  1. Lihat address bar Chrome → ada ikon ⊕ di sebelah kanan
+  2. Klik → pilih "Install"
+  3. Aplikasi akan muncul di Desktop / Start Menu
+  4. Bisa dibuka seperti aplikasi biasa, tanpa browser
+
+ATAU klik tombol "📲 INSTALL APP" yang muncul di dashboard.
+
+=====================================================
+  CATATAN PENTING
+=====================================================
+
+  ✅ Data tersimpan di browser (localStorage) — TIDAK dikirim
+     ke server manapun, aman di komputer lokal.
+
+  ✅ Setelah install sebagai PWA, app tetap jalan meski
+     internet mati (offline mode).
+
+  ⚠️  Jangan "Clear Browsing Data" di Chrome untuk site ini,
+     karena akan menghapus data pasien.
+
+  ⚠️  Untuk backup data, gunakan tombol EXPORT CSV di halaman
+     Riwayat Pasien secara berkala.
+
+  📌  Selalu gunakan browser Chrome atau Edge (Chromium)
+     untuk pengalaman terbaik.
+
+=====================================================
+  HALAMAN-HALAMAN APLIKASI
+=====================================================
+
+  1. DASHBOARD     → Monitoring real-time semua bed & pasien
+  2. RIWAYAT       → Laporan kunjungan pasien + export CSV
+  3. NOTIFIKASI    → Alert pasien yang mendekati / melebihi 3 jam
+
+=====================================================
+  Dibuat dengan ED Journey Monitor System
+  Versi: 1.0 | PWA Ready
+=====================================================
