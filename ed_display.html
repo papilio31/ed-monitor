@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ED Display — Monitor</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { background: #0f172a; font-family: 'Inter', sans-serif; color: #f0f6ff; }
+
+/* TOP BAR */
+.top-bar { background: #1e2d4a; border-bottom: 2px solid #2d4a7a; padding: 8px 18px; display: flex; align-items: center; gap: 14px; height: 54px; }
+.cross { background: #e53935; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: white; flex-shrink: 0; }
+.title-block h1 { font-size: 16px; font-weight: 900; color: #f0f6ff; letter-spacing: 1px; }
+.title-block p  { font-size: 10px; font-weight: 600; color: #7a9ec8; letter-spacing: 0.5px; }
+
+/* STAT CARDS */
+.stat-cards { display: flex; gap: 10px; margin-left: auto; align-items: center; }
+.stat-card { border-radius: 9px; padding: 5px 16px; text-align: center; min-width: 90px; border: 1.5px solid; }
+.stat-card .lbl { font-size: 8px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 1px; }
+.stat-card .val { font-size: 22px; font-weight: 900; }
+.sc-green  { background: #052e16; border-color: #16a34a; }
+.sc-green .lbl { color: #86efac; } .sc-green .val { color: #4ade80; }
+.sc-yellow { background: #1c1408; border-color: #d97706; }
+.sc-yellow .lbl { color: #fde68a; } .sc-yellow .val { color: #fbbf24; }
+.sc-red    { background: #1c0505; border-color: #dc2626; }
+.sc-red .lbl { color: #fca5a5; } .sc-red .val { color: #f87171; }
+.clock-card { background: #0f172a; border: 1.5px solid #334155; border-radius: 9px; padding: 5px 16px; text-align: center; }
+.clock-time { font-size: 22px; font-weight: 900; color: #60a5fa; font-family: monospace; letter-spacing: 1px; }
+.clock-date { font-size: 9px; font-weight: 700; color: #64748b; }
+
+/* MAIN GRID */
+.grid-wrap { padding: 10px 14px; height: calc(100vh - 54px); overflow-y: auto; display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+
+/* ZONE SECTION */
+.zone-section { border-radius: 12px; padding: 10px; border: 1.5px solid; }
+.zs-resus  { background: #1a0808; border-color: #7f1d1d; }
+.zs-obs    { background: #080d1a; border-color: #1e3a8a; }
+.zs-triage { background: #061208; border-color: #14532d; }
+.zs-ft     { background: #100814; border-color: #4c1d95; }
+.zs-proc   { background: #140d04; border-color: #7c2d12; }
+.zs-iso    { background: #140810; border-color: #831843; }
+.zs-wc     { background: #04100e; border-color: #164e63; }
+.zs-oc     { background: #0c0c04; border-color: #3f3f0e; }
+
+.zone-title { font-size: 11px; font-weight: 900; letter-spacing: 2px; margin-bottom: 8px; padding-bottom: 6px; text-transform: uppercase; }
+.zt-resus  { color: #fca5a5; border-bottom: 1px solid #7f1d1d; }
+.zt-obs    { color: #93c5fd; border-bottom: 1px solid #1e3a8a; }
+.zt-triage { color: #86efac; border-bottom: 1px solid #14532d; }
+.zt-ft     { color: #c4b5fd; border-bottom: 1px solid #4c1d95; }
+.zt-proc   { color: #fdba74; border-bottom: 1px solid #7c2d12; }
+.zt-iso    { color: #f9a8d4; border-bottom: 1px solid #831843; }
+.zt-wc     { color: #67e8f9; border-bottom: 1px solid #164e63; }
+.zt-oc     { color: #fef08a; border-bottom: 1px solid #3f3f0e; }
+
+/* BED GRID */
+.beds-grid { display: grid; gap: 7px; }
+.beds-2 { grid-template-columns: repeat(2, 1fr); }
+.beds-3 { grid-template-columns: repeat(3, 1fr); }
+.beds-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* BED CARD */
+.bed-card { border-radius: 9px; padding: 8px 10px; border: 1.5px solid; position: relative; overflow: hidden; }
+.bed-card.empty { opacity: 0.3; }
+
+/* Zone bed colors (dark theme) */
+.z-resus  .bed-card { background: #2d0b0b; border-color: #7f1d1d; }
+.z-obs    .bed-card { background: #0b1730; border-color: #1e3a8a; }
+.z-triage .bed-card { background: #0b2010; border-color: #14532d; }
+.z-ft     .bed-card { background: #1a0b2d; border-color: #4c1d95; }
+.z-proc   .bed-card { background: #2d1606; border-color: #7c2d12; }
+.z-iso    .bed-card { background: #2d0b20; border-color: #831843; }
+.z-wc     .bed-card { background: #061a18; border-color: #164e63; }
+.z-oc     .bed-card { background: #181806; border-color: #3f3f0e; }
+
+/* Breach pulse glow */
+@keyframes breach-glow { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0);} 50%{box-shadow:0 0 14px 4px rgba(220,38,38,0.6);} }
+.bed-card.breach { animation: breach-glow 1.2s infinite; border-color: #dc2626 !important; }
+
+.bed-name    { font-size: 11px; font-weight: 900; letter-spacing: 0.5px; color: #94a3b8; text-transform: uppercase; }
+.patient-name{ font-size: 13px; font-weight: 800; color: #f0f6ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 2px 0; }
+.mr-label    { font-size: 9px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; }
+.timer       { font-size: 20px; font-weight: 900; font-family: monospace; letter-spacing: -0.5px; margin: 3px 0; }
+.t-green  { color: #34d399; }
+.t-yellow { color: #fbbf24; }
+.t-orange { color: #fb923c; }
+.t-red    { color: #f87171; }
+@keyframes flash { 0%,100%{opacity:1;}50%{opacity:0.25;} }
+.flash { animation: flash 0.8s infinite; }
+
+.progress-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.08); overflow: hidden; margin: 3px 0; }
+.progress-fill { height: 100%; border-radius: 2px; transition: width 1s; }
+
+.badge-row  { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 3px; letter-spacing: 0.2px; }
+.b-obs   { background: #052e16; color: #86efac; }
+.b-lab   { background: #1c1408; color: #fde68a; }
+.b-ct    { background: #080d1a; color: #93c5fd; }
+.b-cons  { background: #100814; color: #c4b5fd; }
+.b-admit { background: #0f172a; color: #a5b4fc; }
+.b-proc  { background: #140d04; color: #fdba74; }
+.b-iso   { background: #140810; color: #f9a8d4; }
+.b-icu   { background: #1a0505; color: #fca5a5; }
+.b-plan  { background: #1e293b; color: #94a3b8; }
+
+.empty-icon { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 56px; gap: 3px; }
+.empty-text { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.2); letter-spacing: 1.5px; }
+
+/* ALERT BAR at bottom */
+.alert-bar { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #7f1d1d; border-top: 2px solid #dc2626; padding: 6px 18px; z-index: 50; }
+.alert-bar.visible { display: flex; align-items: center; gap: 12px; }
+.alert-bar-icon { font-size: 18px; flex-shrink: 0; }
+.alert-bar-items { font-size: 11px; font-weight: 700; color: #fecaca; flex: 1; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="cross">+</div>
+  <div class="title-block">
+    <h1>ED JOURNEY MONITOR</h1>
+    <p>SQI TARGET &lt; 3 JAM — DISPLAY MODE</p>
+  </div>
+  <div class="stat-cards">
+    <div class="stat-card sc-green"><div class="lbl">TOTAL PASIEN</div><div class="val" id="s-total">—</div></div>
+    <div class="stat-card sc-yellow"><div class="lbl">RISIKO &gt;2.5j</div><div class="val" id="s-risk">—</div></div>
+    <div class="stat-card sc-red"><div class="lbl">BREACH &gt;3j</div><div class="val" id="s-breach">—</div></div>
+    <div class="clock-card"><div class="clock-time" id="clock">--:--:--</div><div class="clock-date" id="clock-date">--</div></div>
+  </div>
+</div>
+
+<div class="grid-wrap" id="grid-wrap">
+  <!-- Zones rendered by JS -->
+</div>
+
+<div class="alert-bar" id="alert-bar">
+  <div class="alert-bar-icon">🚨</div>
+  <div class="alert-bar-items" id="alert-items"></div>
+</div>
+
+<script>
+const BEDS_DEF = [
+  { id:'R1',    zone:'resus',  name:'RESUS 1'  }, { id:'R2',    zone:'resus',  name:'RESUS 2'  },
+  { id:'R3',    zone:'resus',  name:'RESUS 3'  }, { id:'R4',    zone:'resus',  name:'RESUS 4'  },
+  { id:'OBS1',  zone:'obs',    name:'OBS 1'    }, { id:'OBS2',  zone:'obs',    name:'OBS 2'    },
+  { id:'OBS3',  zone:'obs',    name:'OBS 3'    }, { id:'OBS4',  zone:'obs',    name:'OBS 4'    },
+  { id:'OBS5',  zone:'obs',    name:'OBS 5'    }, { id:'OBS6',  zone:'obs',    name:'OBS 6'    },
+  { id:'OBS7',  zone:'obs',    name:'OBS 7'    }, { id:'OBS8',  zone:'obs',    name:'OBS 8'    },
+  { id:'TRIAGE',zone:'triage', name:'TRIAGE'   },
+  { id:'FT1',   zone:'ft',     name:'FT 1'     }, { id:'FT2',   zone:'ft',     name:'FT 2'     },
+  { id:'PROC1', zone:'proc',   name:'PROC 1'   },
+  { id:'ISO1',  zone:'iso',    name:'ISO 1'    },
+  { id:'WC1',   zone:'wc',     name:'WC 1'     }, { id:'WC2',   zone:'wc',     name:'WC 2'     },
+  { id:'WC3',   zone:'wc',     name:'WC 3'     }, { id:'WC4',   zone:'wc',     name:'WC 4'     },
+  { id:'OC1',   zone:'oc',     name:'OC 1'     }, { id:'OC2',   zone:'oc',     name:'OC 2'     },
+  { id:'OC3',   zone:'oc',     name:'OC 3'     }, { id:'OC4',   zone:'oc',     name:'OC 4'     },
+];
+
+let beds = BEDS_DEF.map(b => ({...b, patient:null, mr:null, startTime:null, status:'', plan:''}));
+
+const ZONE_META = {
+  resus:  { label:'🔴 RESUS',    sc:'zs-resus',  zc:'z-resus',  tc:'zt-resus',  cols:'beds-4' },
+  obs:    { label:'🔵 OBSERVASI',sc:'zs-obs',    zc:'z-obs',    tc:'zt-obs',    cols:'beds-4' },
+  triage: { label:'🟢 TRIAGE',   sc:'zs-triage', zc:'z-triage', tc:'zt-triage', cols:'beds-2' },
+  ft:     { label:'🟣 FAST TRACK',sc:'zs-ft',    zc:'z-ft',     tc:'zt-ft',     cols:'beds-2' },
+  proc:   { label:'🟠 PROSEDUR', sc:'zs-proc',   zc:'z-proc',   tc:'zt-proc',   cols:'beds-2' },
+  iso:    { label:'🩷 ISOLASI',  sc:'zs-iso',    zc:'z-iso',    tc:'zt-iso',    cols:'beds-2' },
+  wc:     { label:'🩵 WAITING CHAIR',sc:'zs-wc', zc:'z-wc',     tc:'zt-wc',     cols:'beds-4' },
+  oc:     { label:'🟡 OC',       sc:'zs-oc',     zc:'z-oc',     tc:'zt-oc',     cols:'beds-4' },
+};
+
+const STATUS_BADGE = {
+  'OBSERVASI':'b-obs','WAIT LAB':'b-lab','WAIT CT':'b-ct','WAIT CONSULT':'b-cons',
+  'WAIT ADMIT':'b-admit','PROCEDURE':'b-proc','ISOLASI':'b-iso','WAIT ICU':'b-icu'
+};
+
+function timerClass(mins) {
+  if (mins >= 180) return 't-red';
+  if (mins >= 150) return 't-orange';
+  if (mins >= 120) return 't-yellow';
+  return 't-green';
+}
+function progressColor(mins) {
+  if (mins >= 180) return '#ef4444';
+  if (mins >= 150) return '#f97316';
+  if (mins >= 120) return '#eab308';
+  return '#22c55e';
+}
+function formatTime(ms) {
+  const tot = Math.floor(ms/1000);
+  const h = Math.floor(tot/3600), m = Math.floor((tot%3600)/60), s = tot%60;
+  return h>0
+    ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function renderBed(b) {
+  if (!b.patient) {
+    return `<div class="bed-card empty">
+      <div class="bed-name">${b.name}</div>
+      <div class="empty-icon"><div class="empty-text">AVAILABLE</div></div>
+    </div>`;
+  }
+  const elapsed = Date.now() - b.startTime;
+  const mins = elapsed/60000;
+  const pct = Math.min(100,(mins/180)*100);
+  const tc = timerClass(mins);
+  const isBreached = mins >= 180;
+  return `<div class="bed-card${isBreached?' breach':''}">
+    <div class="bed-name">${b.name}</div>
+    <div class="patient-name">${b.patient}</div>
+    ${b.mr ? `<div class="mr-label">MR: ${b.mr}</div>` : ''}
+    <div class="timer ${tc}${isBreached?' flash':''}" id="t-${b.id}">${formatTime(elapsed)}</div>
+    <div class="progress-bar"><div class="progress-fill" id="p-${b.id}" style="width:${pct}%;background:${progressColor(mins)};"></div></div>
+    <div class="badge-row">
+      ${b.status ? `<span class="badge ${STATUS_BADGE[b.status]||'b-plan'}">${b.status}</span>` : ''}
+      ${b.plan   ? `<span class="badge b-plan">${b.plan}</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderAll() {
+  const zones = [...new Set(BEDS_DEF.map(b=>b.zone))];
+  const wrap = document.getElementById('grid-wrap');
+  wrap.innerHTML = zones.map(z => {
+    const meta = ZONE_META[z] || { label:z, sc:'zs-obs', zc:'z-obs', tc:'zt-obs', cols:'beds-4' };
+    const zoneBeds = beds.filter(b=>b.zone===z);
+    return `<div class="zone-section ${meta.sc}">
+      <div class="zone-title ${meta.tc}">${meta.label}</div>
+      <div class="beds-grid ${meta.cols} ${meta.zc}">
+        ${zoneBeds.map(renderBed).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  updateStats();
+  updateAlerts();
+}
+
+function tickTimers() {
+  const now = Date.now();
+  beds.forEach(b => {
+    if (!b.patient || !b.startTime) return;
+    const elapsed = now - b.startTime;
+    const mins = elapsed/60000;
+    const te = document.getElementById('t-'+b.id);
+    const pe = document.getElementById('p-'+b.id);
+    if (te) { te.className='timer '+timerClass(mins)+(mins>=180?' flash':''); te.textContent=formatTime(elapsed); }
+    if (pe) { pe.style.width=Math.min(100,(mins/180)*100)+'%'; pe.style.background=progressColor(mins); }
+  });
+}
+
+function updateStats() {
+  const occ = beds.filter(b=>b.patient);
+  const now = Date.now();
+  const risk   = occ.filter(b=>{const m=(now-b.startTime)/60000;return m>=150&&m<180;});
+  const breach = occ.filter(b=>(now-b.startTime)/60000>=180);
+  document.getElementById('s-total').textContent  = occ.length;
+  document.getElementById('s-risk').textContent   = risk.length;
+  document.getElementById('s-breach').textContent = breach.length;
+}
+
+function updateAlerts() {
+  const now = Date.now();
+  const alerts = beds.filter(b=>b.patient).map(b=>({b,mins:(now-b.startTime)/60000})).filter(x=>x.mins>=120).sort((a,b2)=>b2.mins-a.mins);
+  const bar = document.getElementById('alert-bar');
+  if (!alerts.length) { bar.classList.remove('visible'); return; }
+  bar.classList.add('visible');
+  document.getElementById('alert-items').innerHTML = alerts.map(({b,mins})=>{
+    const label = mins>=180?'⚠ BREACH >3j':mins>=150?'RISIKO >2.5j':'MONITOR >2j';
+    return `<strong>${b.name} — ${b.patient}</strong>: ${label} (${Math.floor(mins)}m)`;
+  }).join('　|　');
+}
+
+function updateClock() {
+  const d = new Date();
+  const months=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+  document.getElementById('clock').textContent = String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+  document.getElementById('clock-date').textContent = d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+}
+
+// ─── SYNC FROM LOCALSTORAGE (written by ed_input.html) ────────────────────
+function syncBeds() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('ed_beds_state') || '[]');
+    if (!saved.length) return;
+    saved.forEach(s => {
+      const b = beds.find(x=>x.id===s.id);
+      if (b) { b.patient=s.patient; b.mr=s.mr; b.startTime=s.startTime; b.status=s.status; b.plan=s.plan; }
+    });
+  } catch(e) {}
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+syncBeds();
+renderAll();
+
+setInterval(tickTimers, 1000);
+setInterval(updateClock, 1000);
+setInterval(() => { syncBeds(); renderAll(); }, 5000); // sync every 5s
+updateClock();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>

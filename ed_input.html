@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ED Input — Nurse Station</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e2d4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ED Input">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #f0f4fa; font-family: 'Inter', sans-serif; color: #1a2233; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+/* TOP BAR */
+.top-bar { background: #1e2d4a; padding: 9px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.2); flex-shrink: 0; }
+.cross { background: #e53935; width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 900; color: white; flex-shrink: 0; }
+.title-block h1 { font-size: 14px; font-weight: 900; color: #f0f6ff; letter-spacing: 0.5px; }
+.title-block p  { font-size: 9px; font-weight: 600; color: #7a9ec8; }
+.top-links { margin-left: auto; display: flex; gap: 7px; align-items: center; }
+.top-link { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #c8dcf5; font-size: 10px; font-weight: 700; padding: 5px 11px; border-radius: 6px; cursor: pointer; text-decoration: none; transition: background 0.15s; white-space: nowrap; }
+.top-link:hover { background: rgba(255,255,255,0.2); }
+.clock { font-size: 14px; font-weight: 900; color: #60a5fa; font-family: monospace; background: rgba(255,255,255,0.08); padding: 4px 11px; border-radius: 6px; }
+
+/* STAT ROW */
+.stat-row { background: #fff; border-bottom: 1.5px solid #e2e8f0; padding: 8px 16px; display: flex; gap: 16px; align-items: center; flex-shrink: 0; }
+.stat-item { display: flex; align-items: center; gap: 7px; }
+.stat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.stat-label { font-size: 10px; font-weight: 700; color: #64748b; }
+.stat-num { font-size: 18px; font-weight: 900; }
+.sn-green { color: #059669; } .sn-yellow { color: #d97706; } .sn-red { color: #dc2626; }
+
+/* MAIN SPLIT */
+.main { display: grid; grid-template-columns: 340px 1fr; gap: 0; flex: 1; overflow: hidden; }
+
+/* LEFT — TAMBAH PASIEN */
+.left-panel { background: #fff; border-right: 1.5px solid #e2e8f0; overflow-y: auto; padding: 16px; }
+.section-title { font-size: 12px; font-weight: 900; letter-spacing: 1px; color: #1d4ed8; border-bottom: 2px solid #bfdbfe; padding-bottom: 8px; margin-bottom: 14px; }
+
+.form-group { margin-bottom: 11px; }
+.form-group label { font-size: 10px; font-weight: 800; color: #7a8aaa; display: block; margin-bottom: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+.form-group input, .form-group select { background: #f8fafc; border: 1.5px solid #d4daea; border-radius: 8px; color: #1a2233; font-size: 13px; font-weight: 600; padding: 8px 11px; width: 100%; font-family: 'Inter', sans-serif; transition: border-color 0.15s; }
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #2563eb; background: #fff; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+.adm-box { background: #fffbeb; border: 1.5px solid #fbbf24; border-radius: 8px; padding: 10px 12px; margin-bottom: 11px; }
+.adm-box label { font-size: 10px; font-weight: 800; color: #92400e; display: block; margin-bottom: 4px; }
+.adm-box input { background: #fff; border: 1.5px solid #fbbf24; border-radius: 7px; font-size: 17px; font-weight: 900; color: #1a2233; padding: 7px 11px; width: 100%; font-family: 'Inter', monospace; }
+.adm-note { font-size: 9px; color: #92400e; margin-top: 4px; font-weight: 600; }
+
+.btn-add { background: #2563eb; color: white; border: none; border-radius: 9px; padding: 11px; font-size: 13px; font-weight: 800; cursor: pointer; width: 100%; font-family: 'Inter', sans-serif; transition: background 0.15s; margin-top: 2px; }
+.btn-add:hover { background: #1d4ed8; }
+
+/* RIGHT — BED CARDS */
+.right-panel { overflow-y: auto; padding: 14px 16px; background: #f0f4fa; }
+.zone-label { font-size: 10px; font-weight: 900; letter-spacing: 2px; color: #5a6a88; margin: 12px 0 7px; text-transform: uppercase; }
+.zone-label:first-child { margin-top: 0; }
+.beds-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+
+/* BED CARDS */
+.bed-card { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 11px; padding: 10px 12px; transition: box-shadow 0.15s; position: relative; }
+.bed-card.occupied { border-color: #93c5fd; background: #f8fbff; }
+.bed-card.warn     { border-color: #fbbf24; background: #fffdf0; }
+.bed-card.risk     { border-color: #f97316; background: #fffaf5; }
+.bed-card.breach   { border-color: #ef4444; background: #fff5f5; animation: breach-pulse 1.2s infinite; }
+@keyframes breach-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0);} 50%{box-shadow:0 0 0 4px rgba(239,68,68,0.2);} }
+
+.bed-card.empty { opacity: 0.5; }
+.bed-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.bed-name-lbl { font-size: 11px; font-weight: 900; color: #64748b; letter-spacing: 0.5px; text-transform: uppercase; }
+.bed-zone-dot { width: 8px; height: 8px; border-radius: 50%; }
+.dz-resus{background:#ef4444;} .dz-obs{background:#3b82f6;} .dz-triage{background:#22c55e;} .dz-ft{background:#8b5cf6;} .dz-proc{background:#f97316;} .dz-iso{background:#ec4899;} .dz-wc{background:#06b6d4;} .dz-oc{background:#eab308;}
+
+.patient-name  { font-size: 14px; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mr-lbl        { font-size: 10px; font-weight: 700; color: #94a3b8; margin-bottom: 2px; }
+.bed-timer     { font-size: 22px; font-weight: 900; font-family: monospace; letter-spacing: -0.5px; margin: 3px 0; }
+.tc-green{color:#059669;} .tc-yellow{color:#d97706;} .tc-orange{color:#ea580c;} .tc-red{color:#dc2626;}
+@keyframes flash { 0%,100%{opacity:1;}50%{opacity:0.2;} }
+.flash { animation: flash 0.9s infinite; }
+
+.progress-bar  { height: 4px; border-radius: 2px; background: #e2e8f0; overflow: hidden; margin-bottom: 6px; }
+.progress-fill { height: 100%; border-radius: 2px; transition: width 1s; }
+
+.badge-row { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 8px; }
+.badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 3px; }
+.b-obs{background:#bbf7d0;color:#14532d;} .b-lab{background:#fef08a;color:#713f12;} .b-ct{background:#bfdbfe;color:#1e3a8a;} .b-cons{background:#e9d5ff;color:#4c1d95;} .b-admit{background:#c7d2fe;color:#1e1b4b;} .b-proc{background:#fed7aa;color:#7c2d12;} .b-iso{background:#fbcfe8;color:#831843;} .b-icu{background:#fecaca;color:#7f1d1d;} .b-mri{background:#d1fae5;color:#065f46;} .b-xray{background:#fef3c7;color:#92400e;} .b-plan{background:#e2e8f0;color:#475569;}
+
+/* ACTION BUTTONS on each card */
+.card-actions { display: flex; gap: 5px; }
+.ca-btn { flex: 1; border: none; border-radius: 6px; padding: 6px 4px; font-size: 10px; font-weight: 800; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; letter-spacing: 0.2px; }
+.ca-btn:hover { filter: brightness(0.9); transform: translateY(-1px); }
+.ca-status   { background: #fff3e0; color: #c2410c; border: 1.5px solid #fdba74; }
+.ca-transfer { background: #f3e8ff; color: #7c3aed; border: 1.5px solid #c4b5fd; }
+.ca-discharge{ background: #f0fdf4; color: #059669; border: 1.5px solid #86efac; }
+
+.empty-label { font-size: 11px; font-weight: 700; color: #cbd5e1; text-align: center; padding: 14px 0 4px; letter-spacing: 0.5px; }
+
+/* CONFIRM MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 200; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: #fff; border-radius: 16px; padding: 24px; width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+.modal-icon { font-size: 36px; text-align: center; margin-bottom: 10px; }
+.modal-title { font-size: 15px; font-weight: 900; color: #1a2233; text-align: center; margin-bottom: 6px; }
+.modal-desc  { font-size: 12px; color: #64748b; text-align: center; line-height: 1.6; margin-bottom: 18px; }
+.modal-form  { margin-bottom: 14px; }
+.modal-form label { font-size: 10px; font-weight: 800; color: #7a8aaa; display: block; margin-bottom: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+.modal-form select { background: #f8fafc; border: 1.5px solid #d4daea; border-radius: 8px; color: #1a2233; font-size: 13px; font-weight: 600; padding: 8px 11px; width: 100%; font-family: 'Inter', sans-serif; margin-bottom: 8px; }
+.modal-btns  { display: flex; gap: 9px; }
+.mbtn { flex: 1; border: none; border-radius: 9px; padding: 11px; font-size: 13px; font-weight: 800; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+.mbtn-cancel   { background: #f1f5f9; color: #64748b; }
+.mbtn-cancel:hover { background: #e2e8f0; }
+.mbtn-confirm-green  { background: #059669; color: white; }
+.mbtn-confirm-green:hover  { background: #047857; }
+.mbtn-confirm-orange { background: #ea580c; color: white; }
+.mbtn-confirm-orange:hover { background: #c2410c; }
+.mbtn-confirm-purple { background: #7c3aed; color: white; }
+.mbtn-confirm-purple:hover { background: #6d28d9; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: #1e2d4a; color: white; padding: 10px 22px; border-radius: 10px; font-size: 13px; font-weight: 700; box-shadow: 0 4px 18px rgba(0,0,0,0.22); opacity: 0; transition: opacity 0.3s; z-index: 999; pointer-events: none; white-space: nowrap; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="cross">+</div>
+  <div class="title-block">
+    <h1>ED NURSE STATION</h1>
+    <p>INPUT & MANAJEMEN PASIEN</p>
+  </div>
+  <div class="top-links">
+    <span class="clock" id="clock">--:--:--</span>
+    <a href="ed_display.html" class="top-link" target="_blank">📺 Display</a>
+    <a href="ed_history.html" class="top-link" target="_blank">📋 Riwayat</a>
+    <a href="ed_notifikasi.html" class="top-link" target="_blank">🔔 Notifikasi</a>
+  </div>
+</div>
+
+<!-- STAT ROW -->
+<div class="stat-row">
+  <div class="stat-item">
+    <div class="stat-dot" style="background:#059669;"></div>
+    <div class="stat-label">TOTAL PASIEN</div>
+    <div class="stat-num sn-green" id="s-total">0</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-dot" style="background:#d97706;"></div>
+    <div class="stat-label">RISIKO &gt;2.5j</div>
+    <div class="stat-num sn-yellow" id="s-risk">0</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-dot" style="background:#dc2626;"></div>
+    <div class="stat-label">BREACH &gt;3j</div>
+    <div class="stat-num sn-red" id="s-breach">0</div>
+  </div>
+</div>
+
+<!-- MAIN SPLIT -->
+<div class="main">
+
+  <!-- LEFT: TAMBAH PASIEN -->
+  <div class="left-panel">
+    <div class="section-title">➕ TAMBAH PASIEN BARU</div>
+
+    <div class="grid2">
+      <div class="form-group">
+        <label>Nama Singkat</label>
+        <input id="a-name" placeholder="Cth: BUDI S." style="text-transform:uppercase;"/>
+      </div>
+      <div class="form-group">
+        <label>No. MR</label>
+        <input id="a-mr" placeholder="Cth: 123456"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Bed</label>
+      <select id="a-bed"></select>
+    </div>
+
+    <div class="grid2">
+      <div class="form-group">
+        <label>Status</label>
+        <select id="a-status"></select>
+      </div>
+      <div class="form-group">
+        <label>Plan</label>
+        <select id="a-plan"></select>
+      </div>
+    </div>
+
+    <div class="adm-box">
+      <label>⏱ WAKTU ADMISSION AKTUAL</label>
+      <input id="a-admtime" type="time"/>
+      <div class="adm-note">⚠ Isi sesuai jam masuk aktual. Timer dihitung dari waktu ini.</div>
+    </div>
+
+    <button class="btn-add" onclick="doAdd()">➕ TAMBAH PASIEN</button>
+  </div>
+
+  <!-- RIGHT: BED CARDS -->
+  <div class="right-panel" id="bed-panel">
+    <!-- rendered by JS -->
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box" id="modal-box">
+    <!-- filled by JS -->
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────
+const BEDS_DEF = [
+  { id:'R1',    zone:'resus',  name:'RESUS 1'  }, { id:'R2',    zone:'resus',  name:'RESUS 2'  },
+  { id:'R3',    zone:'resus',  name:'RESUS 3'  }, { id:'R4',    zone:'resus',  name:'RESUS 4'  },
+  { id:'OBS1',  zone:'obs',    name:'OBS 1'    }, { id:'OBS2',  zone:'obs',    name:'OBS 2'    },
+  { id:'OBS3',  zone:'obs',    name:'OBS 3'    }, { id:'OBS4',  zone:'obs',    name:'OBS 4'    },
+  { id:'OBS5',  zone:'obs',    name:'OBS 5'    }, { id:'OBS6',  zone:'obs',    name:'OBS 6'    },
+  { id:'OBS7',  zone:'obs',    name:'OBS 7'    }, { id:'OBS8',  zone:'obs',    name:'OBS 8'    },
+  { id:'TRIAGE',zone:'triage', name:'TRIAGE'   },
+  { id:'FT1',   zone:'ft',     name:'FT 1'     }, { id:'FT2',   zone:'ft',     name:'FT 2'     },
+  { id:'PROC1', zone:'proc',   name:'PROC 1'   },
+  { id:'ISO1',  zone:'iso',    name:'ISO 1'    },
+  { id:'WC1',   zone:'wc',     name:'WC 1'     }, { id:'WC2',   zone:'wc',     name:'WC 2'     },
+  { id:'WC3',   zone:'wc',     name:'WC 3'     }, { id:'WC4',   zone:'wc',     name:'WC 4'     },
+  { id:'OC1',   zone:'oc',     name:'OC 1'     }, { id:'OC2',   zone:'oc',     name:'OC 2'     },
+  { id:'OC3',   zone:'oc',     name:'OC 3'     }, { id:'OC4',   zone:'oc',     name:'OC 4'     },
+];
+const beds = BEDS_DEF.map(b => ({...b, patient:null, mr:null, startTime:null, status:'', plan:''}));
+
+const statuses = ['OBSERVASI','WAIT LAB','WAIT CT','WAIT MRI','WAIT X-RAY','WAIT CONSULT','WAIT ADMIT','PROCEDURE','ISOLASI','WAIT ICU'];
+const plans    = ['DISCHARGE','ADMIT','ICU','REFER'];
+const ZONE_NAMES = { resus:'RESUS', obs:'OBSERVASI', triage:'TRIAGE', ft:'FAST TRACK', proc:'PROSEDUR', iso:'ISOLASI', wc:'WAITING CHAIR', oc:'OC' };
+const STATUS_BADGE = { 'OBSERVASI':'b-obs','WAIT LAB':'b-lab','WAIT CT':'b-ct','WAIT MRI':'b-mri','WAIT X-RAY':'b-xray','WAIT CONSULT':'b-cons','WAIT ADMIT':'b-admit','PROCEDURE':'b-proc','ISOLASI':'b-iso','WAIT ICU':'b-icu' };
+
+// ─── STORAGE ──────────────────────────────────────────────────────────────
+function loadBeds() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('ed_beds_state') || '[]');
+    saved.forEach(s => { const b = beds.find(x=>x.id===s.id); if(b){ b.patient=s.patient; b.mr=s.mr; b.startTime=s.startTime; b.status=s.status; b.plan=s.plan; } });
+  } catch(e) {}
+}
+function saveBeds() {
+  try {
+    localStorage.setItem('ed_beds_state', JSON.stringify(beds.map(b=>({id:b.id,patient:b.patient,mr:b.mr,startTime:b.startTime,status:b.status,plan:b.plan}))));
+    sessionStorage.setItem('ed_beds', JSON.stringify(beds));
+  } catch(e) {}
+}
+function getPatients() { try { return JSON.parse(localStorage.getItem('ed_patients')||'[]'); } catch(e){ return []; } }
+function savePatients(list) { try { localStorage.setItem('ed_patients', JSON.stringify(list.slice(0,2000))); } catch(e){} }
+
+// Status keys tracked with timestamps
+const STATUS_TIME_KEYS = {
+  'WAIT LAB':     'tLab',
+  'WAIT CT':      'tCt',
+  'WAIT MRI':     'tMri',
+  'WAIT X-RAY':   'tXray',
+  'WAIT CONSULT': 'tConsult',
+  'WAIT ADMIT':   'tAdmit',
+  'PROCEDURE':    'tProc',
+  'WAIT ICU':     'tIcu',
+  'ISOLASI':      'tIso',
+  'OBSERVASI':    'tObs',
+};
+
+function recordEvent(event, bed) {
+  const patients = getPatients();
+  const now = new Date();
+  const nowStr = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+  if (event==='MASUK') {
+    const ad = bed.startTime ? new Date(bed.startTime) : now;
+    const at = String(ad.getHours()).padStart(2,'0')+':'+String(ad.getMinutes()).padStart(2,'0');
+    const rec = { id:bed.id+'_'+(bed.startTime||Date.now()), admitDate:ad.toLocaleDateString('id-ID'), admitTimestamp:bed.startTime||Date.now(), admitTime:at, bedId:bed.id, bedName:bed.name, zone:bed.zone, patient:bed.patient, mr:bed.mr, status:bed.status||'-', plan:bed.plan||'-', dischargeTime:'-', durationMins:0, visitStatus:'AKTIF',
+      tObs:'', tLab:'', tCt:'', tMri:'', tXray:'', tConsult:'', tAdmit:'', tProc:'', tIcu:'', tIso:'' };
+    // Record initial status time if set at admission
+    const initKey = STATUS_TIME_KEYS[bed.status];
+    if (initKey) rec[initKey] = at;
+    patients.unshift(rec);
+  } else if (event==='DISCHARGE') {
+    const idx = patients.findIndex(p=>p.bedId===bed.id&&p.visitStatus==='AKTIF');
+    if (idx!==-1) { patients[idx].dischargeTime=nowStr; patients[idx].durationMins=bed.startTime?Math.round((Date.now()-bed.startTime)/60000):0; patients[idx].visitStatus='DISCHARGE'; }
+  } else if (event==='UBAH STATUS') {
+    const idx = patients.findIndex(p=>p.bedId===bed.id&&p.visitStatus==='AKTIF');
+    if (idx!==-1) {
+      patients[idx].status=bed.status; patients[idx].plan=bed.plan;
+      // Only record FIRST time each status is set
+      const key = STATUS_TIME_KEYS[bed.status];
+      if (key && !patients[idx][key]) patients[idx][key] = nowStr;
+    }
+  } else if (event==='TRANSFER') {
+    const idx = patients.findIndex(p=>p.bedId===bed.id&&p.visitStatus==='AKTIF');
+    if (idx!==-1) patients[idx]._transferring=true;
+  } else if (event==='TRANSFER MASUK') {
+    const idx = patients.findIndex(p=>p._transferring===true);
+    if (idx!==-1) { patients[idx].bedId=bed.id; patients[idx].bedName=bed.name; patients[idx].zone=bed.zone; delete patients[idx]._transferring; }
+  }
+  savePatients(patients);
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────
+function toast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.background = color||'#1e2d4a';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function formatTime(ms) {
+  const s=Math.floor(ms/1000), m=Math.floor(s/60), h=Math.floor(m/60);
+  return h>0?`${h}j ${m%60}m`:`${m}m`;
+}
+function timerClass(mins) {
+  if (mins>=180) return 'tc-red'; if (mins>=150) return 'tc-orange'; if (mins>=120) return 'tc-yellow'; return 'tc-green';
+}
+function cardClass(mins) {
+  if (mins>=180) return 'breach'; if (mins>=150) return 'risk'; if (mins>=120) return 'warn'; return 'occupied';
+}
+function progressColor(mins) {
+  if (mins>=180) return '#ef4444'; if (mins>=150) return '#f97316'; if (mins>=120) return '#eab308'; return '#22c55e';
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+document.getElementById('modal-overlay').addEventListener('click', e => { if(e.target===document.getElementById('modal-overlay')) closeModal(); });
+
+// ─── RENDER BED CARDS ─────────────────────────────────────────────────────
+function renderBedPanel() {
+  const zones = [...new Set(BEDS_DEF.map(b=>b.zone))];
+  const now = Date.now();
+  let html = '';
+  zones.forEach(zone => {
+    const zoneBeds = beds.filter(b=>b.zone===zone);
+    const occ = zoneBeds.filter(b=>b.patient).length;
+    html += `<div class="zone-label">● ${ZONE_NAMES[zone]||zone} <span style="font-weight:600;color:#94a3b8;">(${occ}/${zoneBeds.length})</span></div>`;
+    html += `<div class="beds-grid">`;
+    zoneBeds.forEach(b => {
+      if (!b.patient) {
+        html += `<div class="bed-card empty">
+          <div class="bed-top">
+            <div class="bed-name-lbl">${b.name}</div>
+            <div class="bed-zone-dot dz-${b.zone}"></div>
+          </div>
+          <div class="empty-label">AVAILABLE</div>
+        </div>`;
+        return;
+      }
+      const elapsed = now - b.startTime;
+      const mins = elapsed/60000;
+      const pct = Math.min(100,(mins/180)*100);
+      html += `<div class="bed-card ${cardClass(mins)}">
+        <div class="bed-top">
+          <div class="bed-name-lbl">${b.name}</div>
+          <div class="bed-zone-dot dz-${b.zone}"></div>
+        </div>
+        <div class="patient-name">${b.patient}</div>
+        ${b.mr?`<div class="mr-lbl">MR: ${b.mr}</div>`:''}
+        <div class="bed-timer ${timerClass(mins)}${mins>=180?' flash':''}" id="t-${b.id}">${formatTime(elapsed)}</div>
+        <div class="progress-bar"><div class="progress-fill" id="p-${b.id}" style="width:${pct}%;background:${progressColor(mins)};"></div></div>
+        <div class="badge-row">
+          ${b.status?`<span class="badge ${STATUS_BADGE[b.status]||'b-plan'}">${b.status}</span>`:''}
+          ${b.plan?`<span class="badge b-plan">${b.plan}</span>`:''}
+        </div>
+        <div class="card-actions">
+          <button class="ca-btn ca-status"   onclick="confirmStatus('${b.id}')">✏️ Status</button>
+          <button class="ca-btn ca-transfer" onclick="confirmTransfer('${b.id}')">⇄ Transfer</button>
+          <button class="ca-btn ca-discharge" onclick="confirmDischarge('${b.id}')">✅ Discharge</button>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('bed-panel').innerHTML = html;
+}
+
+function tickTimers() {
+  const now = Date.now();
+  beds.forEach(b => {
+    if (!b.patient||!b.startTime) return;
+    const elapsed = now-b.startTime, mins = elapsed/60000;
+    const te = document.getElementById('t-'+b.id);
+    const pe = document.getElementById('p-'+b.id);
+    if (te) { te.className='bed-timer '+timerClass(mins)+(mins>=180?' flash':''); te.textContent=formatTime(elapsed); }
+    if (pe) { pe.style.width=Math.min(100,(mins/180)*100)+'%'; pe.style.background=progressColor(mins); }
+  });
+}
+
+function refreshStats() {
+  const occ = beds.filter(b=>b.patient);
+  const now = Date.now();
+  document.getElementById('s-total').textContent  = occ.length;
+  document.getElementById('s-risk').textContent   = occ.filter(b=>{const m=(now-b.startTime)/60000;return m>=150&&m<180;}).length;
+  document.getElementById('s-breach').textContent = occ.filter(b=>(now-b.startTime)/60000>=180).length;
+}
+
+function refreshAddBedDropdown() {
+  const empty = beds.filter(b=>!b.patient);
+  document.getElementById('a-bed').innerHTML = empty.length
+    ? empty.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')
+    : '<option value="">— Semua bed terisi —</option>';
+}
+
+// ─── CONFIRM MODALS ───────────────────────────────────────────────────────
+
+function confirmDischarge(bedId) {
+  const b = beds.find(x=>x.id===bedId);
+  if (!b||!b.patient) return;
+  const elapsed = Date.now()-b.startTime;
+  const mins = Math.floor(elapsed/60000);
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-icon">✅</div>
+    <div class="modal-title">Discharge Pasien?</div>
+    <div class="modal-desc">
+      <strong>${b.patient}</strong> di bed <strong>${b.name}</strong><br>
+      MR: ${b.mr||'—'} &nbsp;|&nbsp; Durasi ED: <strong>${formatTime(elapsed)}</strong><br><br>
+      <span style="color:#dc2626;font-weight:700;">Tindakan ini tidak dapat dibatalkan.</span>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="closeModal()">Batal</button>
+      <button class="mbtn mbtn-confirm-green" onclick="execDischarge('${bedId}')">✅ Ya, Discharge</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function execDischarge(bedId) {
+  const b = beds.find(x=>x.id===bedId);
+  const name = b.patient;
+  recordEvent('DISCHARGE', b);
+  b.patient=null; b.mr=null; b.startTime=null; b.status=''; b.plan='';
+  saveBeds(); closeModal();
+  toast(`✅ ${name} sudah discharge`, '#059669');
+  renderBedPanel(); refreshStats(); refreshAddBedDropdown();
+}
+
+function confirmStatus(bedId) {
+  const b = beds.find(x=>x.id===bedId);
+  if (!b||!b.patient) return;
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-icon">✏️</div>
+    <div class="modal-title">Ubah Status / Plan</div>
+    <div class="modal-desc"><strong>${b.patient}</strong> — Bed <strong>${b.name}</strong></div>
+    <div class="modal-form">
+      <label>Status Baru</label>
+      <select id="m-status">${statuses.map(s=>`<option value="${s}"${b.status===s?' selected':''}>${s}</option>`).join('')}</select>
+      <label>Plan Baru</label>
+      <select id="m-plan">${plans.map(p=>`<option value="${p}"${b.plan===p?' selected':''}>${p}</option>`).join('')}</select>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="closeModal()">Batal</button>
+      <button class="mbtn mbtn-confirm-orange" onclick="execStatus('${bedId}')">✏️ Simpan</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function execStatus(bedId) {
+  const b = beds.find(x=>x.id===bedId);
+  b.status = document.getElementById('m-status').value;
+  b.plan   = document.getElementById('m-plan').value;
+  recordEvent('UBAH STATUS', b);
+  saveBeds(); closeModal();
+  toast(`✏️ Status ${b.name} diperbarui`, '#ea580c');
+  renderBedPanel(); refreshStats();
+}
+
+function confirmTransfer(bedId) {
+  const b = beds.find(x=>x.id===bedId);
+  if (!b||!b.patient) return;
+  const empty = beds.filter(x=>!x.patient);
+  if (!empty.length) { toast('Tidak ada bed kosong untuk transfer','#dc2626'); return; }
+  document.getElementById('modal-box').innerHTML = `
+    <div class="modal-icon">⇄</div>
+    <div class="modal-title">Transfer Bed</div>
+    <div class="modal-desc"><strong>${b.patient}</strong> dari bed <strong>${b.name}</strong></div>
+    <div class="modal-form">
+      <label>Pindah ke Bed</label>
+      <select id="m-to">${empty.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="closeModal()">Batal</button>
+      <button class="mbtn mbtn-confirm-purple" onclick="execTransfer('${bedId}')">⇄ Ya, Transfer</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function execTransfer(fromId) {
+  const from = beds.find(b=>b.id===fromId);
+  const toId = document.getElementById('m-to').value;
+  const to   = beds.find(b=>b.id===toId);
+  if (!to||to.patient) { toast('Bed tujuan sudah terisi','#dc2626'); return; }
+  recordEvent('TRANSFER', from);
+  to.patient=from.patient; to.mr=from.mr; to.startTime=from.startTime; to.status=from.status; to.plan=from.plan;
+  from.patient=null; from.mr=null; from.startTime=null; from.status=''; from.plan='';
+  recordEvent('TRANSFER MASUK', to);
+  saveBeds(); closeModal();
+  toast(`⇄ Transfer ke ${to.name} berhasil`, '#7c3aed');
+  renderBedPanel(); refreshStats(); refreshAddBedDropdown();
+}
+
+// ─── TAMBAH PASIEN ────────────────────────────────────────────────────────
+function doAdd() {
+  const name   = document.getElementById('a-name').value.trim().toUpperCase();
+  const mr     = document.getElementById('a-mr').value.trim();
+  const bedId  = document.getElementById('a-bed').value;
+  const status = document.getElementById('a-status').value;
+  const plan   = document.getElementById('a-plan').value;
+  const admTimeStr = document.getElementById('a-admtime').value;
+
+  if (!name)  { document.getElementById('a-name').style.borderColor='#dc2626'; toast('Nama wajib diisi!','#dc2626'); return; }
+  if (!mr)    { document.getElementById('a-mr').style.borderColor='#dc2626'; toast('No. MR wajib diisi!','#dc2626'); return; }
+  if (!bedId) { toast('Tidak ada bed kosong','#dc2626'); return; }
+
+  let admStartTime = Date.now();
+  if (admTimeStr) {
+    const [hh,mm] = admTimeStr.split(':').map(Number);
+    const d = new Date(); d.setHours(hh,mm,0,0);
+    admStartTime = Math.min(d.getTime(), Date.now());
+  }
+  const b = beds.find(x=>x.id===bedId);
+  b.patient=name; b.mr=mr; b.startTime=admStartTime; b.status=status; b.plan=plan;
+  recordEvent('MASUK', b);
+  saveBeds();
+  document.getElementById('a-name').value=''; document.getElementById('a-mr').value='';
+  document.getElementById('a-name').style.borderColor=''; document.getElementById('a-mr').style.borderColor='';
+  // Reset admission time to now
+  const nd=new Date(); document.getElementById('a-admtime').value=String(nd.getHours()).padStart(2,'0')+':'+String(nd.getMinutes()).padStart(2,'0');
+  toast(`✅ ${name} ditambahkan ke ${b.name}`, '#059669');
+  renderBedPanel(); refreshStats(); refreshAddBedDropdown();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+document.getElementById('a-status').innerHTML = statuses.map(s=>`<option>${s}</option>`).join('');
+document.getElementById('a-plan').innerHTML   = plans.map(p=>`<option>${p}</option>`).join('');
+const nd=new Date(); document.getElementById('a-admtime').value=String(nd.getHours()).padStart(2,'0')+':'+String(nd.getMinutes()).padStart(2,'0');
+
+loadBeds();
+renderBedPanel();
+refreshStats();
+refreshAddBedDropdown();
+
+function updateClock() {
+  const d=new Date();
+  document.getElementById('clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+}
+setInterval(updateClock, 1000);
+setInterval(tickTimers, 1000);
+setInterval(refreshStats, 5000);
+updateClock();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
